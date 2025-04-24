@@ -569,22 +569,21 @@ $total_pages = ceil($total_rows / $rows_per_page);
     </div>
 
     <div style="text-align: center; margin: 20px 0;">
-    <button onclick="printTable()" style="
-        background-color: #007BFF;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 6px;
-        font-size: 16px;
-        cursor: pointer;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        transition: background-color 0.3s ease;
-    "
-    onmouseover="this.style.backgroundColor='#0056b3'"
-    onmouseout="this.style.backgroundColor='#007BFF'"
-    >
-        Imprimir Tabla
-    </button>
+            <button onclick="printTable()" style="
+                background-color: #8c6d48;
+                color: white;
+                padding: 10px 20px;
+                border: none;
+                border-radius: 6px;
+                font-size: 16px;
+                cursor: pointer;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                transition: background-color 0.3s ease;
+            "
+            onmouseover="this.style.backgroundColor='#0056b3'"
+            onmouseout="this.style.backgroundColor='#8c6d48'">
+                Imprimir Tabla
+            </button>
     </div>
 
     <script>

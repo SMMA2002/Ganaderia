@@ -377,6 +377,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $fecha_de_compra = trim($_POST['fecha_compra']);
     $cantidad = trim($_POST['cantidad']);
     $Tipo = trim($_POST['Tipo']);
+    $id_usuario = $_SESSION['ID'];
 
     // Validar que los campos requeridos no estén vacíos
     if (empty($Codigo) || empty($Nombre_donante) || empty($cantidad)) {
@@ -385,8 +386,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Insertar datos en la base de datos
-    $sqlPersona = "INSERT INTO muestra_semen (Codigo, Nombre_donante, fecha_de_compra, cantidad, Tipo)
-                   VALUES ('$Codigo', '$Nombre_donante', '$fecha_de_compra', '$cantidad', '$Tipo')";
+    $sqlPersona = "INSERT INTO muestra_semen (Codigo, Nombre_donante, fecha_de_compra, cantidad, Tipo, Iduser)
+                   VALUES ('$Codigo', '$Nombre_donante', '$fecha_de_compra', '$cantidad', '$Tipo', '$id_usuario')";
 
     if (mysqli_query($conexion, $sqlPersona)) {
         echo "<script>alert('Registro exitoso.'); window.location.href = 'Addsemen.php';</script>";

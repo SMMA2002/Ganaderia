@@ -18,7 +18,7 @@ $id_usuario = $_SESSION['ID']; // Ahora sí está definido correctamente
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reporte de establo</title>
+    <title>Reporte de muestras de semen </title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
@@ -291,7 +291,8 @@ $id_usuario = $_SESSION['ID']; // Ahora sí está definido correctamente
         }
 
  /* Estilos generales para la tabla */
- #animalTable {
+ /* Reemplazar #animalTable por #semenTable */
+#semenTable {
     width: 100%;
     border-collapse: collapse;
     margin: 20px 0;
@@ -299,44 +300,27 @@ $id_usuario = $_SESSION['ID']; // Ahora sí está definido correctamente
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Estilo de las celdas y bordes */
-#animalTable th, #animalTable td {
+#semenTable th, #semenTable td {
     padding: 12px 15px;
     text-align: left;
     border: 1px solid #ddd;
 }
 
-/* Estilo de las cabeceras de las columnas */
-#animalTable th {
-    background-color:#8c6d48;
+#semenTable th {
+    background-color: #8c6d48;
     color: white;
     font-size: 16px;
 }
 
-/* Asegurar que todas las filas tengan fondo blanco */
-#animalTable tr {
+#semenTable tr {
     background-color: rgb(255, 255, 255);
 }
 
-/* Efecto hover sobre las filas */
-#animalTable tr:hover {
+#semenTable tr:hover {
     background-color: #a27951;
-    color : white;
+    color: white;
     cursor: pointer;
 }
-
-/* Estilo para las celdas del cuerpo de la tabla */
-#animalTable td {
-    font-size: 14px;
-    font-weight: bold;
-}
-
-/* Estilo para la tabla cuando no hay datos */
-#animalTable tbody tr.no-data td {
-    text-align: center;
-    color: #777;
-}
-
 
 /* Opcional: agregar paginación si lo necesitas */
 .pagination {
@@ -427,7 +411,8 @@ $id_usuario = $_SESSION['ID']; // Ahora sí está definido correctamente
 
 
     <div class="content">
-    <?php
+    
+<?php
 require 'conexion.php';
 
 $busqueda = $conexion->real_escape_string($_GET['search'] ?? '');
@@ -435,14 +420,14 @@ $rows_per_page = intval($_GET['rows_per_page'] ?? 5);
 $page = max(intval($_GET['page'] ?? 1), 1);
 $offset = ($page - 1) * $rows_per_page;
 
-$id_usuario = $_SESSION['ID']; // Verificar que esta variable esté definida
+$id_usuario = $_SESSION['ID']; // Asegúrate de que esté definido
 
 // Construir condición de búsqueda
 $condicion = "";
 if (!empty($busqueda)) {
-    if (preg_match('/^[0-9]+$/', $busqueda)) { // Si es un número (ID)
-        $condicion = "muestra_semen.ID = '$busqueda'";
-    } else { // Si es un texto
+    if (preg_match('/^[0-9]+$/', $busqueda)) {
+        $condicion = "muestra_semen.Codigo = '$busqueda'";
+    } else {
         $condicion = "
             muestra_semen.Codigo LIKE '%$busqueda%' OR
             muestra_semen.Nombre_donante LIKE '%$busqueda%' OR
@@ -451,27 +436,31 @@ if (!empty($busqueda)) {
     }
 }
 
-$where_clause = "WHERE muestra_semen.IdUser = $id_usuario";
+// Añadir condición del usuario
+$where_clause = "WHERE muestra_semen.Iduser = $id_usuario";
 if (!empty($condicion)) {
     $where_clause .= " AND ($condicion)";
 }
 
-// Crear consulta SQL
+// Consulta principal
 $query = "
-    SELECT muestra_semen.Codigo, muestra_semen.Nombre_donante, muestra_semen.fecha_de_compra, 
-           muestra_semen.cantidad, muestra_semen.tipo
+    SELECT Codigo,Nombre_donante,fecha_de_compra,cantidad,Tipo
     FROM muestra_semen
-    LEFT JOIN usuario ON muestra_semen.IdUser = usuario.ID
     $where_clause
-    ORDER BY muestra_semen.Codigo ASC
+    ORDER BY Codigo ASC
     LIMIT $rows_per_page OFFSET $offset
 ";
 
 $consulta = $conexion->query($query);
 
-if (!$consulta) {
-    die("Error en la consulta SQL: " . $conexion->error);
-}
+
+
+
+// Consulta para el total de registros (¡IMPORTANTE!)
+$totalQuery = "SELECT COUNT(*) AS total FROM muestra_semen $where_clause";
+$totalResult = $conexion->query($totalQuery);
+$total_rows = $totalResult->fetch_assoc()['total'];
+$total_pages = ceil($total_rows / $rows_per_page);
 ?>
 
     <!-- Formulario de búsqueda -->
@@ -503,6 +492,8 @@ if (!$consulta) {
     </script>
 
     <!-- Tabla de resultados -->
+        
+     
     <div id="printable-table">
         <div id="print-header" style="display: none; text-align: center; margin-bottom: 20px;">
             <h2>Reporte de semen</h2>
@@ -510,24 +501,34 @@ if (!$consulta) {
         </div>
 
         <table id="semenTable">
+    <thead>
+        <tr>
+            <th>Codigo</th>
+            <th>Nombre del donador</th>
+            <th>Fecha de compra</th>
+            <th>Cantidad</th>
+            <th>Tipo</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php if ($consulta && $consulta->num_rows > 0): ?>
+            <?php while ($row = $consulta->fetch_assoc()): ?>
+                <tr>
+                    <td><?= htmlspecialchars($row['Codigo']) ?></td>
+                    <td><?= htmlspecialchars($row['Nombre_donante']) ?></td>
+                    <td><?= htmlspecialchars($row['fecha_de_compra']) ?></td>
+                    <td><?= htmlspecialchars($row['cantidad']) ?></td>
+                    <td><?= htmlspecialchars($row['Tipo']) ?></td>
+                </tr>
+            <?php endwhile; ?>
+        <?php else: ?>
             <tr>
-                <th>Codigo</th>
-                <th>Nombre del donador</th>
-                <th>Fecha de compra</th>
-                <th>Cantidad</th>
-                <th>Tipo</th>
+                <td colspan="5">No se encontraron registros.</td>
             </tr>
-            <?php if ($consulta && $consulta->num_rows > 0): ?>
-                <?php while ($row = $consulta->fetch_assoc()): ?>
-                    <tr>
-                        <td><?= htmlspecialchars($row['Codigo']) ?></td>
-                        <td><?= htmlspecialchars($row['Nombre_donante']) ?></td>
-                        <td><?= htmlspecialchars($row['fecha_de_compra']) ?></td>
-                        <td><?= htmlspecialchars($row['cantidad']) ?></td>
-                        <td><?= htmlspecialchars($row['tipo']) ?></td>
-                        </tr>
-        <?php } ?>
-    </table>
+        <?php endif; ?>
+    </tbody>
+</table>
+
 
         <!-- Paginación -->
         <div class="pagination">
@@ -556,8 +557,11 @@ if (!$consulta) {
                 Imprimir Tabla
             </button>
         </div>
+       </div>
     </div>
-</div>
+
+
+
 <script>
 function printTable() {
     // Mostrar el encabezado personalizado
@@ -569,7 +573,7 @@ function printTable() {
 
     // Ocultar elementos que no se deben imprimir (como botones)
     const originalContent = document.body.innerHTML;
-    const tabla = document.getElementById('animalTable').outerHTML;
+    const tabla = document.getElementById('semenTable').outerHTML;
     const encabezado = header.outerHTML;
 
     document.body.innerHTML = encabezado + tabla;
